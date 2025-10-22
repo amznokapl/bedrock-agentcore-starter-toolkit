@@ -1,0 +1,10 @@
+from bedrock_agentcore import BedrockAgentCoreApp
+{{ agent_imports|default("") }}
+
+app = BedrockAgentCoreApp()
+
+{{ agent_instantiation|default("") }}
+
+@app.entrypoint
+def invoke():
+    {{ agent_invocation|indent(4) }}
