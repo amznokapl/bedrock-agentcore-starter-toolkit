@@ -67,3 +67,10 @@ tests/
 
 # Keep wheelhouse for offline installations
 # wheelhouse/
+
+# Monorepo ignore infra directories
+cdk.out/
+cdk/
+terraform/
+iac/
+infra/

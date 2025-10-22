@@ -1,5 +1,6 @@
 from pathlib import Path
 import shutil
+import subprocess
 import typer
 import re
 from ...bootstrap.generate import generate_project
@@ -28,7 +29,7 @@ def generate(
         raise typer.BadParameter("Can only enable one agent SDK for the generated project")
     if Path(project_name).exists():
         raise typer.BadParameter(f"A directory already exists with name {project_name}! Either delete that directory or choose a new project name.")
-    if not shutil.which("npx"):
+    if use_cdk and not shutil.which("npx"):
         raise typer.BadParameter("Need to install npx to bootstrap with cdk. Npx comes installed with any npm >= 5.2.0. Npm is bundled with node install.")
     
     # Build feature configuration list

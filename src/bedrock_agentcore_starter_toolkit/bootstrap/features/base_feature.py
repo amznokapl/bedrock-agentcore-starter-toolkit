@@ -34,23 +34,23 @@ class Feature(ABC):
 
     def apply(self, context: ProjectContext) -> None:
         """Render all Jinja2 templates in the feature’s directory into the target directory."""
-
         self.before_apply(context)
+        self.execute(context)
+        self.after_apply(context)
 
-        for src in self.template_dir.rglob("*.j2"):
-            rel = src.relative_to(self.template_dir)
-            dest = context.output_dir / rel.with_suffix("")  # remove .j2 from output filename
+    def execute(self, context: ProjectContext) -> None:
+        self.render_dir(self.template_dir, context.output_dir, context)
+
+    def render_dir(self, src_dir: Path, dest_dir: Path, context: ProjectContext) -> None:
+        """Render all .j2 templates under src_dir into dest_dir, preserving structure."""
+        for src in src_dir.rglob("*.j2"):
+            rel = src.relative_to(src_dir)
+            dest = dest_dir / rel.with_suffix("") # remove .j2 from output filename
             dest.parent.mkdir(parents=True, exist_ok=True)
 
-            try:
-                template = self.env.get_template(str(rel))
-                rendered = template.render(context.dict())
-            except TemplateError as e:
-                raise RuntimeError(f"Error rendering template '{rel}': {e}") from e
-
-            dest.write_text(rendered)
-
-        self.after_apply(context)
+            template_rel = src.relative_to(self.template_dir).as_posix()
+            template = self.env.get_template(template_rel)
+            dest.write_text(template.render(context.dict()))
 
 
 class SDKFeature(Feature):
