@@ -47,7 +47,7 @@ class CDKFeature(Feature):
         stacks_dir: Path = context.iac_dir / "lib" / "stacks"
         stacks_dir.mkdir(parents=True, exist_ok=True)
 
-        self.render_dir(self.template_dir, context.iac_dir, context)
+        self.render_dir(context.iac_dir, context)
 
     def after_apply(self, context: ProjectContext):
         pass
