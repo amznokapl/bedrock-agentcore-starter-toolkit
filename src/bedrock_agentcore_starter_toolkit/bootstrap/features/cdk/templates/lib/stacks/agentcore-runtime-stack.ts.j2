@@ -2,15 +2,18 @@ import * as cdk from 'aws-cdk-lib/core';
 import { Construct } from 'constructs/lib/construct';
 import * as bedrockagentcore from 'aws-cdk-lib/aws-bedrockagentcore'
 import * as iam from 'aws-cdk-lib/aws-iam'
+import { BaseStackProps } from '../types';
 
-export interface AgentCoreRuntimeStackProps extends cdk.StackProps {
-    appName: string
+export interface AgentCoreRuntimeStackProps extends BaseStackProps {
     imageUri: string
+    gatewayUrl: string
 }
 
 export class AgentCoreRuntimeStack extends cdk.Stack {
-    runtimeRole: iam.Role
-    agentCoreRuntime: bedrockagentcore.CfnRuntime
+    readonly runtimeRole: iam.Role;
+    readonly agentCoreRuntime: bedrockagentcore.CfnRuntime;
+    readonly agentCoreRuntimeProdEndpoint: bedrockagentcore.CfnRuntimeEndpoint;
+    readonly agentCoreRuntimeDevEndpoint: bedrockagentcore.CfnRuntimeEndpoint;
 
     constructor(scope: Construct, id: string, props: AgentCoreRuntimeStackProps) {
         super(scope, id, props);
@@ -26,7 +29,7 @@ export class AgentCoreRuntimeStack extends cdk.Stack {
             iam.ManagedPolicy.fromAwsManagedPolicyName('AmazonBedrockAgentCoreMemoryBedrockModelInferenceExecutionRolePolicy')
         );
 
-        this.agentCoreRuntime = new bedrockagentcore.CfnRuntime(this, `${props.appName}-AgentRuntime`, {
+        this.agentCoreRuntime = new bedrockagentcore.CfnRuntime(scope, `${props.appName}-AgentRuntime`, {
             agentRuntimeArtifact: {
                 containerConfiguration: {
                     containerUri: props.imageUri
@@ -36,7 +39,24 @@ export class AgentCoreRuntimeStack extends cdk.Stack {
             networkConfiguration: {
                 networkMode: "PUBLIC"
             },
-            roleArn: this.runtimeRole.roleArn
-        })
+            roleArn: this.runtimeRole.roleArn,
+            environmentVariables: {
+                "gatewayUrl": props.gatewayUrl
+            }
+        });
+
+        // DEFAULT endpoint always points to newest published version. Optionally, can use these versioned endpoints below
+        // https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/agent-runtime-versioning.html
+        this.agentCoreRuntimeProdEndpoint = new bedrockagentcore.CfnRuntimeEndpoint(scope, `${props.appName}-AgentRuntimeProdEndpoint`, {
+            agentRuntimeId: this.agentCoreRuntime.attrAgentRuntimeId,
+            agentRuntimeVersion: "1",
+            name: "PROD"
+        });
+
+        this.agentCoreRuntimeDevEndpoint = new bedrockagentcore.CfnRuntimeEndpoint(scope, `${props.appName}-AgentRuntimeProdEndpoint`, {
+            agentRuntimeId: this.agentCoreRuntime.attrAgentRuntimeId,
+            agentRuntimeVersion: "1",
+            name: "DEV"
+        });
     }
 }

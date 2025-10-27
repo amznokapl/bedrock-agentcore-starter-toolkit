@@ -1,7 +1,6 @@
 from pathlib import Path
 import subprocess
 
-from jinja2 import TemplateError
 from ...features.base_feature import Feature
 from ...features.types import BootstrapIACProvider
 from ...types import ProjectContext
